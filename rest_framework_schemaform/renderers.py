@@ -16,14 +16,16 @@ class JSONSchemaRenderer(renderers.JSONRenderer):
         view = renderer_context.get('view')
         response = renderer_context.get('response')
         queryset = view.get_queryset()
+        model = queryset.model
+        instance = model()
+        # Pass the Django model to the serializer
+        serializer = JsonSchemaSerializer(instance=instance)
         # Return the schema only if no errors occurred
         if response.exception:
-            result = {}
+            data = data
         else:
-            model = queryset.model
-            instance = model()
-            # Pass the Django model to the serializer
-            serializer = JsonSchemaSerializer(instance=instance)
-            # Render the serializer result to json
-            result = serializer.to_representation(data)
+            data = None
+        # Render the serializer result to json
+        result = serializer.to_representation(data)
+
         return json.dumps(result)

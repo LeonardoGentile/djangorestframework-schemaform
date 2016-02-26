@@ -18,51 +18,55 @@ class JsonSchemaSerializer(serializers.ModelSerializer):
         return fields
 
     def to_representation(self, obj):
-        result = {
-            'title': self.Meta.model.__doc__,
-            'type': 'object',
-            'form': [],
-            'required': [],
-            'properties': OrderedDict()
-        }
-        # Schema
-        for key, value in self.get_fields().items():
-            mapping_dict = REST_MODEL_TO_JSON_SCHEMA_MAPPING[type(value)]
-            result['properties'][key] = {
-                'key': key,
-                'title': value.label or key,
-                'description': value.help_text or '',
+        # this happens only in case of error
+        if obj is not None:
+            result = obj
+        else:
+            result = {
+                'title': self.Meta.model.__doc__,
+                'type': 'object',
+                'form': [],
+                'required': [],
+                'properties': OrderedDict()
             }
-            for m_key, m_value in mapping_dict.items():
-                result['properties'][key][m_key] = m_value
+            # Schema
+            for key, value in self.get_fields().items():
+                mapping_dict = REST_MODEL_TO_JSON_SCHEMA_MAPPING[type(value)]
+                result['properties'][key] = {
+                    'key': key,
+                    'title': value.label or key,
+                    'description': value.help_text or '',
+                }
+                for m_key, m_value in mapping_dict.items():
+                    result['properties'][key][m_key] = m_value
 
-        # Required
-        for key, value in self.get_fields().items():
-            if value.required:
-                result['required'].append(key)
-        # Form Helper
-        result['form'].append({
-            'type': 'help',
-            'helpvalue': '<div class="alert alert-info">Alert Example</div>'
-        })
+            # Required
+            for key, value in self.get_fields().items():
+                if value.required:
+                    result['required'].append(key)
+            # Form Helper
+            result['form'].append({
+                'type': 'help',
+                'helpvalue': '<div class="alert alert-info">Alert Example</div>'
+            })
 
-        # Form Keys
-        for key, value in self.get_fields().items():
-            result['form'].append(key)
+            # Form Keys
+            for key, value in self.get_fields().items():
+                result['form'].append(key)
 
-        # Form Actions
-        result['form'].append(
-            {
-                'type': 'submit',
-                'title': 'Save'
-            }
-        )
-        result['form'].append(
-            {
-                'type': 'button',
-                'title': 'Cancel',
-                'style': 'btn-default',
-                'onClick': 'clearForm(form)'
-            }
-        )
+            # Form Actions
+            result['form'].append(
+                {
+                    'type': 'submit',
+                    'title': 'Save'
+                }
+            )
+            result['form'].append(
+                {
+                    'type': 'button',
+                    'title': 'Cancel',
+                    'style': 'btn-default',
+                    'onClick': 'clearForm(form)'
+                }
+            )
         return result
